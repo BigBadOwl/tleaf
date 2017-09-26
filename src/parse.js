@@ -34,6 +34,7 @@ function parse(source) {
     enter: function (node) {
       // find all call expressions, because all angular unit types are
       // defined as function calls: .controller(), .service(), etc
+      
       if (node.type === 'CallExpression') {
 
         var calleeProp = _.get(node, 'callee.property', {});
@@ -67,6 +68,7 @@ function parse(source) {
   _.forEach(calls, function (call) {
     // for now use only completely parsed units
     var name = findName(call.node, call.scope);
+    
     if (_.isUndefined(name)) { return; }
 
     var type = findType(call.node, call.scope);
@@ -76,6 +78,8 @@ function parse(source) {
     if (_.isUndefined(module.name)) { return; }
 
     var deps = findDeps(call.node, call.scope, type);
+    
+    
 
     // Angular should not allow having circular dependency, but if
     // there is any in a source code, do not continue execution
@@ -129,13 +133,21 @@ function findModule(callExpression, scope) {
     return findModule(calleeObj, scope);
 
   } else if (calleeObj.type === 'Identifier') {
+  
     // when reaching module variable it can be in a form of "angular.module(..)"
-    if (calleeProp.name === 'module' && calleeObj.name === 'angular') {
+    if (calleeProp.name === 'module' && calleeObj.name === 'angular')  {
 
       module.name = _.get(callExpression, 'arguments[0].value');
 
     // or module can be stored in variable; find this variable then
-    } else if (_.contains(config.units.process, calleeProp.name)) {
+    } 
+    else if (calleeObj.name === 'app')  {
+
+      module.name = _.get(callExpression, 'arguments[0].value');
+		console.log(module.name)
+    // or module can be stored in variable; find this variable then
+    }
+    else if (_.contains(config.units.process, calleeProp.name)) {
 
       var varName = calleeObj.name;
       var varNode = findVariable(varName, scope);
